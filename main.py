@@ -23,14 +23,14 @@ def perform_conversion():
         result_text = f"Результат: {result:.2f}"
         result_label.config(text=result_text)
         
-        # Добавление в историю (сохраняем последние 5)
+        # Добавление в историю
         rule_info = CONVERSIONS[conv_name]
         history_item = f"{value} {rule_info['from']} ➔ {result:.2f} {rule_info['to']}"
         history_list.insert(0, history_item)
         if len(history_list) > 5:
             history_list.pop()
         
-        # Обновление виджета истории на экране
+        # Обновление истории на экране
         history_box.config(state="normal")
         history_box.delete("1.0", tk.END)
         history_box.insert(tk.END, "\n".join(history_list))
@@ -40,14 +40,27 @@ def perform_conversion():
         result_label.config(text=f"Ошибка расчета: {e}")
 
 def swap_units():
-    """Меняет местами текущий выбор в списке на обратный (если он есть в словаре)."""
+    """Меняет местами единицы для выбранного пункта."""
     current = conversion_box.get()
-    # Ищем зеркальное правило (например, меняем местами слова или ключи)
-    parts = current.split(" → ")
-    if len(parts) == 2:
-        reversed_name = f"{parts[1]} → {parts[0]}"
-        if reversed_name in CONVERSIONS:
-            conversion_box.set(reversed_name)
+    
+    # Словарь точных пар для взаимной замены
+    swaps = {
+        "Километры → мили": "Мили → километры",
+        "Мили → километры": "Километры → мили",
+        "Килограммы → фунты": "Фунты → килограммы",
+        "Фунты → килограммы": "Килограммы → фунты",
+        "°C → °F": "°F → °C",
+        "°F → °C": "°C → °F",
+        "USD → KZT": "KZT → USD",
+        "KZT → USD": "USD → KZT"
+    }
+    
+    # Если текущий пункт есть в словаре пар, меняем его
+    if current in swaps:
+        target = swaps[current]
+        # Проверяем, есть ли такой пункт в выпадающем списке
+        if target in conversion_box['values']:
+            conversion_box.set(target)
 
 # Создание главного окна
 root = tk.Tk()
@@ -61,7 +74,7 @@ heading.pack(pady=10)
 # Поле для ввода числа
 value_entry = ttk.Entry(root, font=("Arial", 11), width=25)
 value_entry.pack(pady=5)
-value_entry.insert(0, "1")  # значение по умолчанию
+value_entry.insert(0, "1")
 
 # Выпадающий список категорий/направлений
 conversion_box = ttk.Combobox(
@@ -74,7 +87,7 @@ conversion_box = ttk.Combobox(
 conversion_box.current(0)
 conversion_box.pack(pady=5)
 
-# Фрейм для кнопок управления («Конвертировать» и «Поменять местами»)
+# Фрейм для кнопок управления
 btn_frame = ttk.Frame(root)
 btn_frame.pack(pady=8)
 
@@ -88,7 +101,7 @@ swap_button.grid(row=0, column=1, padx=5)
 result_label = ttk.Label(root, text="Результат появится здесь", font=("Arial", 11, "bold"))
 result_label.pack(pady=8)
 
-# Панель истории последних конвертаций
+# Панель истории
 history_label = ttk.Label(root, text="История последних конвертаций:", font=("Arial", 10))
 history_label.pack(anchor="w", padx=40, pady=(10, 2))
 
